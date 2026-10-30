@@ -28,11 +28,17 @@ jobs:
         env:
           GIST_ID: ${{ vars.TRAFFIC_GIST_ID }}
           ARCHIVE_GIST_ID: ${{ vars.TRAFFIC_ARCHIVE_GIST_ID }}
+          TRAFFIC_OWNER: ${{ vars.TRAFFIC_OWNER || github.repository_owner }}
+          TRAFFIC_REPO: ${{ vars.TRAFFIC_REPO || 'gguf2mlx' }}
         with:
           github-token: ${{ secrets.TRAFFIC_GIST_TOKEN }}
           script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
+            // This workflow runs inside the tracker repository, so context.repo
+            // is the tracker itself — never the repository being measured.
+            // Resolve the measured repository from repo variables instead.
+            const owner = process.env.TRAFFIC_OWNER || context.repo.owner;
+            const repo = process.env.TRAFFIC_REPO || context.repo.repo;
+            console.log(`Tracking ${owner}/${repo} from ${context.repo.owner}/${context.repo.repo}`);
             const gistId = process.env.GIST_ID;
 
             // 0. Freshness check — skip if last run was < 1 hour ago
